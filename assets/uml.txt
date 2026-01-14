@@ -1,0 +1,102 @@
+@startuml
+skinparam classAttributeIconSize 0
+top to bottom direction
+skinparam nodesep 30
+skinparam ranksep 35
+
+' ---------- Classes ----------
+class Object {
+  - name : string
+  + Object(name : string)
+  + ~Object() <<virtual>>
+  + getName() : const string&
+  + {abstract} describe() const : string
+}
+
+class Character {
+  - health : int
+  + {static} {readOnly} max_health : int <<constexpr>> = 300
+  + Character(name : string, health : int)
+  + isAlive() const : bool
+  + getCharacterType() const : string <<virtual>>
+  + describe() const : string <<override>>
+  + getHealth() const : int
+  # getAttackValue() const : int <<virtual>>
+  # receiveDamage(dmg : int) : void <<virtual>>
+}
+
+class Weapon {
+  - weapon_strength : int
+  - weapon_type : string
+  + {static} {readOnly} max_weapon_strength : int <<constexpr>> = 300
+  + Weapon(name : string, weapon_strength : int, weapon_type : string)
+  + getWeaponType() const : string
+  + describe() const : string <<override>>
+  # getWeaponStrength() const : int <<virtual>>
+}
+
+class Player {
+  - {static} health_multiplier(weapon_type : const string&) : int
+  - {static} attack_multiplier(weapon_type : const string&) : int
+  + Player(name : string, health : int, weapon_strength : int, weapon_type : string)
+  + getCharacterInfo() const : string
+  + getWeaponInfo() const : string
+  + getCharacterType() const : string <<override>>
+  + describe() const : string <<override>>
+  # getAttackValue() const : int <<override>>
+  # receiveDamage(dmg : int) : void <<override>>
+}
+
+class NPC {
+  - original_health : int
+  - in_rage : bool
+  + NPC(name : string, health : int, weapon_strength : int, weapon_type : string)
+  + getCharacterInfo() const : string
+  + getWeaponInfo() const : string
+  + getCharacterType() const : string <<override>>
+  + inRage() const : bool
+  + describe() const : string <<override>>
+  # getAttackValue() const : int <<override>>
+  # receiveDamage(dmg : int) : void <<override>>
+}
+
+class GameEngine {
+  - turn_count : unsigned int
+  - current : Character*
+  - target : Character*
+  - player : Player*
+  - npc : NPC*
+  + GameEngine(p : Player*, n : NPC*)
+  + printState(std::ostream& output) const : void
+  + logAction(std::ostream& output, ch_type : const string&, attack : int) : void
+  + turnAction(std::ostream& output, attacker : Character* , target : Character*) : void
+  + run(std::ostream& output) : void
+}
+
+' ---------- Inheritance (virtual bases labelled) ----------
+Object <|-- Character : «virtual»
+Object <|-- Weapon    : «virtual»
+Character <|-- Player
+Character <|-- NPC
+Weapon    <|-- Player
+Weapon    <|-- NPC
+
+' ---------- Associations ----------
+GameEngine --> Player
+GameEngine --> NPC
+
+' ---------- Friend function (method-level) ----------
+' UML has no native “friend” concept. We model a dependency with a stereotype.
+Player ..> GameEngine : «friend: turnAction()»
+NPC    ..> GameEngine : «friend: turnAction()»
+
+' ---------- Layout hints (unchanged) ----------
+Object    -[hidden]down- Character
+Object    -[hidden]down- Weapon
+Character -[hidden]down- Player
+Weapon    -[hidden]down- Player
+Player -[hidden]right- NPC
+Player -[hidden]down- GameEngine
+NPC    -[hidden]down- GameEngine
+
+@enduml
